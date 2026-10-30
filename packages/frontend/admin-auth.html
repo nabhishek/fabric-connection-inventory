@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (() => {
+        const param = new URLSearchParams(window.location.search).get("scoutTheme");
+        const theme =
+          param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <link rel="icon" href="data:," />
+    <title>Completing admin sign-in</title>
+  </head>
+  <body>
+    <main>
+      <p role="status" id="auth-status">Completing your tenant admin sign-in...</p>
+    </main>
+    <script type="module" src="/src/admin-auth-bridge.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (() => {
+        const param = new URLSearchParams(window.location.search).get("scoutTheme");
+        const theme =
+          param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action https://login.microsoftonline.com" />
+    <link rel="icon" href="data:," />
+    <title>Sign in to your Fabric inventory</title>
+  </head>
+  <body class="inventory-app font-base">
+    <main class="inventory-container py-800">
+      <section class="inventory-panel space-y-500 p-600">
+        <h1 class="text-600 font-semibold">Sign in to your Fabric inventory</h1>
+        <p id="relay-status" role="status">
+          Continue to Microsoft sign-in. When you finish, these sign-in windows close
+          and your inventory appears inside the Fabric App.
+        </p>
+        <button id="relay-continue" class="inventory-button inventory-button-primary" type="button">
+          Continue to Microsoft sign-in
+        </button>
+      </section>
+    </main>
+    <script type="module" src="/src/admin-auth-relay.ts"></script>
+  </body>
+</html>

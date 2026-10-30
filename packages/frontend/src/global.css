@@ -1,0 +1,554 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+
+/* Bridged tokens — kept in `@theme static` so the CSS vars are always
+   emitted, not tree-shaken when no Tailwind utility consumes them.
+   Required because <VegaVisual> and <DataGrid> read these at runtime via
+   `useCssTheme()` and project them into a JS theme object (Vega's SVG output
+   cannot resolve `var()` references). */
+@theme static {
+  --color-brand: var(--cp-accent);
+  --color-brand-foreground: var(--cp-accent);
+  --color-hover: var(--cp-surface-soft);
+}
+
+@theme {
+  /* Color tokens — light theme
+     Usage: bg-*, text-*, border-* (e.g. bg-primary text-primary-foreground)
+     Each token has a -foreground pair for text on that surface. */
+  --color-background: var(--cp-bg);
+  --color-foreground: var(--cp-text);
+
+  --color-card: var(--cp-surface);
+  --color-card-foreground: var(--cp-text);
+
+  --color-popover: var(--cp-surface);
+  --color-popover-foreground: var(--cp-text);
+
+  --color-primary: var(--cp-accent);
+  --color-primary-foreground: var(--cp-accent-fg);
+
+  --color-secondary: var(--cp-bg-elevated);
+  --color-secondary-foreground: var(--cp-text);
+
+  --color-muted: var(--cp-surface-soft);
+  --color-muted-foreground: var(--cp-text-soft);
+
+  --color-accent: var(--cp-accent-soft);
+  --color-accent-foreground: var(--cp-text);
+
+  --color-destructive: var(--cp-danger);
+  --color-destructive-foreground: var(--cp-accent-fg);
+
+  --color-border: var(--cp-border);
+  --color-input: var(--cp-border);
+  --color-ring: var(--cp-accent);
+
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 16px;
+  --radius-4xl: 24px;
+  --radius-5xl: 32px;
+  --radius-6xl: 40px;
+  --radius-full: 9999px;
+  --radius: 10px;
+
+  /* Spacing — 4px grid; use only these tokens, no interpolation. *-nudge = base − 2px.
+     Usage: p-*, m-*, gap-* (e.g. p-400 gap-300) */
+  --spacing-none: 0;
+  --spacing-100-nudge: 2px;
+  --spacing-100: 4px;
+  --spacing-200-nudge: 6px;
+  --spacing-200: 8px;
+  --spacing-300-nudge: 10px;
+  --spacing-300: 12px;
+  --spacing-400: 16px;
+  --spacing-500: 20px;
+  --spacing-600: 24px;
+  --spacing-700: 28px;
+  --spacing-800: 32px;
+
+  /* Font Sizes — 100-based scale
+     Usage: text-* (e.g. text-300, text-hero-900) */
+  --text-100: 10px;
+  --text-200: 12px;
+  --text-300: 14px;
+  --text-400: 16px;
+  --text-500: 20px;
+  --text-600: 24px;
+  --text-hero-700: 28px;
+  --text-hero-800: 32px;
+  --text-hero-900: 40px;
+  --text-hero-1000: 68px;
+
+  /* Line Heights — paired with font sizes
+     Usage: leading-* (e.g. leading-300) */
+  --leading-100: 14px;
+  --leading-200: 16px;
+  --leading-300: 20px;
+  --leading-400: 22px;
+  --leading-500: 28px;
+  --leading-600: 32px;
+  --leading-hero-700: 36px;
+  --leading-hero-800: 40px;
+  --leading-hero-900: 52px;
+  --leading-hero-1000: 92px;
+
+  /* Font Weights
+     Usage: font-* (e.g. font-semibold) */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Font Families
+     Usage: font-* (e.g. font-heading, font-base) */
+  --font-heading: 'Segoe UI', Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-base: 'Segoe UI', Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-monospace:
+    Consolas, 'Courier New', Courier, monospace; /* code, pre-formatted text */
+  --font-numeric: 'Segoe UI', Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Icon Sizes — 100-based scale
+     Usage: icon-size-* custom utility (e.g. icon-size-200) */
+  --icon-size-100: 12px;
+  --icon-size-200: 16px;
+  --icon-size-300: 20px;
+  --icon-size-400: 24px;
+  --icon-size-500: 28px;
+  --icon-size-600: 32px;
+  --icon-size-700: 48px;
+}
+
+@utility icon-size-* {
+  width: --value(--icon-size-*);
+  height: --value(--icon-size-*);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-base);
+  }
+
+  button, input, select, textarea {
+    font-family: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--cp-accent);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--cp-highlight);
+    color: var(--cp-text);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--cp-border-strong) var(--cp-surface-soft);
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+@layer components {
+  .inventory-container {
+    width: 100%;
+    max-width: 1480px;
+    margin-inline: auto;
+    padding-inline: var(--spacing-600);
+  }
+
+  .inventory-topbar {
+    padding-block: var(--spacing-400);
+    border-bottom: 1px solid var(--cp-border);
+    background: var(--cp-bg-elevated);
+  }
+
+  .inventory-mark {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--cp-border);
+    border-radius: var(--radius-xl);
+    background: var(--cp-accent-soft);
+    color: var(--cp-accent);
+  }
+
+  .inventory-eyebrow {
+    color: var(--cp-accent);
+    font-size: var(--text-200);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.1em;
+  }
+
+  .inventory-button, .inventory-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-200);
+    min-height: 40px;
+    padding: var(--spacing-200) var(--spacing-300);
+    border: 1px solid var(--cp-border);
+    border-radius: var(--radius-xl);
+    background: var(--cp-surface);
+    color: var(--cp-text);
+    font-size: var(--text-300);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-300);
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+
+  .inventory-button:hover:not(:disabled), .inventory-icon-button:hover:not(:disabled) {
+    background: var(--cp-surface-soft);
+    border-color: var(--cp-border-strong);
+  }
+
+  .inventory-button-primary {
+    color: var(--cp-accent-fg);
+    background: var(--cp-accent);
+    border-color: var(--cp-accent);
+  }
+
+  .inventory-button-primary:hover:not(:disabled) {
+    background: var(--cp-accent-hover);
+    border-color: var(--cp-accent-hover);
+  }
+
+  .inventory-button:disabled {
+    color: var(--cp-text-soft);
+    background: var(--cp-surface-soft);
+    cursor: not-allowed;
+  }
+
+  .inventory-icon-button {
+    width: 40px;
+    padding: var(--spacing-200);
+  }
+
+  .inventory-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-100);
+    max-width: 100%;
+    padding: var(--spacing-100) var(--spacing-200);
+    border: 1px solid var(--cp-border);
+    border-radius: var(--radius-md);
+    background: var(--cp-surface-soft);
+    color: var(--cp-text);
+    font-size: var(--text-200);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-200);
+  }
+
+  .inventory-badge-accent {
+    color: var(--cp-accent);
+    background: var(--cp-accent-soft);
+  }
+
+  .inventory-access-note, .inventory-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-300);
+    padding: var(--spacing-400);
+    border: 1px solid var(--cp-border);
+    border-radius: var(--radius-xl);
+    background: var(--cp-bg-elevated);
+  }
+
+  .inventory-access-note > svg {
+    color: var(--cp-accent);
+  }
+
+  .inventory-notice[data-error] {
+    border-left: 4px solid var(--cp-danger);
+  }
+
+  .inventory-notice[data-error] > svg {
+    color: var(--cp-danger);
+  }
+
+  .inventory-warning {
+    border-left: 4px solid var(--cp-warning);
+  }
+
+  .inventory-warning > svg {
+    color: var(--cp-text);
+  }
+
+  .inventory-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--spacing-400);
+  }
+
+  .inventory-metric {
+    padding: var(--spacing-500);
+    border: 1px solid var(--cp-border);
+    border-radius: var(--radius-3xl);
+    background: var(--cp-surface);
+  }
+
+  .inventory-metric-primary {
+    border-top: 3px solid var(--cp-accent);
+    padding-top: calc(var(--spacing-500) - 2px);
+  }
+
+  .inventory-metric-number {
+    margin-block: var(--spacing-300);
+    font-size: var(--text-hero-800);
+    line-height: var(--leading-hero-800);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .inventory-metric-denominator {
+    font-size: var(--text-400);
+    font-weight: var(--font-weight-regular);
+    color: var(--cp-text-soft);
+  }
+
+  .inventory-panel {
+    overflow: hidden;
+    border: 1px solid var(--cp-border);
+    border-radius: var(--radius-3xl);
+    background: var(--cp-surface);
+  }
+
+  .inventory-filters {
+    display: grid;
+    grid-template-columns: minmax(220px, 2fr) minmax(160px, 1fr) minmax(180px, 1fr) auto;
+    align-items: end;
+    gap: var(--spacing-300);
+  }
+
+  .inventory-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-200);
+    min-width: 0;
+    font-size: var(--text-200);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .inventory-field select, .inventory-search {
+    min-height: 40px;
+    width: 100%;
+    border: 1px solid var(--cp-border-strong);
+    border-radius: var(--radius-xl);
+    background: var(--cp-surface);
+    color: var(--cp-text);
+    font-size: var(--text-300);
+    font-weight: var(--font-weight-regular);
+  }
+
+  .inventory-field select {
+    padding: var(--spacing-200) var(--spacing-300);
+    text-overflow: ellipsis;
+  }
+
+  .inventory-search {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-200);
+    padding-inline: var(--spacing-300);
+  }
+
+  .inventory-search > svg {
+    flex-shrink: 0;
+    color: var(--cp-text-soft);
+  }
+
+  .inventory-search input {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    background: var(--cp-surface);
+    color: var(--cp-text);
+  }
+
+  .inventory-search input::placeholder {
+    color: var(--cp-text-soft);
+  }
+
+  .inventory-search:focus-within {
+    outline: 2px solid var(--cp-accent);
+    outline-offset: 3px;
+  }
+
+  .inventory-search input:focus-visible {
+    outline: none;
+  }
+
+  .inventory-table-scroll {
+    overflow-x: auto;
+  }
+
+  .inventory-table {
+    width: 100%;
+    min-width: 840px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    text-align: left;
+  }
+
+  .inventory-table thead {
+    background: var(--cp-surface-soft);
+  }
+
+  .inventory-table th, .inventory-table td {
+    padding: var(--spacing-400) var(--spacing-300);
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  .inventory-table thead th {
+    padding-block: var(--spacing-200);
+    font-size: var(--text-200);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .inventory-table .inventory-expand-column {
+    width: 56px;
+    padding-inline: var(--spacing-200);
+  }
+
+  .inventory-table th:nth-child(2) { width: 27%; }
+  .inventory-table th:nth-child(3) { width: 28%; }
+  .inventory-table th:nth-child(4) { width: 16%; }
+
+  .inventory-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-200);
+    min-height: 36px;
+    cursor: pointer;
+    color: var(--cp-text-soft);
+    text-align: left;
+  }
+
+  .inventory-sort svg { flex-shrink: 0; }
+  .inventory-table [aria-sort="ascending"] .inventory-sort,
+  .inventory-table [aria-sort="descending"] .inventory-sort { color: var(--cp-accent); }
+  .inventory-data-row { border-top: 1px solid var(--cp-border); }
+  .inventory-data-row:hover { background: var(--cp-surface-soft); }
+  .inventory-detail-row { background: var(--cp-bg-elevated); }
+  .inventory-table .inventory-detail-row > td { padding: 0; }
+
+  .inventory-status-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: var(--radius-full);
+    background: var(--cp-text-soft);
+  }
+
+  .inventory-empty {
+    padding: 64px var(--spacing-500);
+    text-align: center;
+  }
+
+  .inventory-skip-link {
+    position: fixed;
+    z-index: 20;
+    top: var(--spacing-200);
+    left: var(--spacing-200);
+    transform: translateY(-200%);
+    padding: var(--spacing-300) var(--spacing-400);
+    border-radius: var(--radius-xl);
+    color: var(--cp-accent-fg);
+    background: var(--cp-accent);
+  }
+
+  .inventory-skip-link:focus { transform: translateY(0); }
+
+  @media (max-width: 1000px) {
+    .inventory-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .inventory-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 600px) {
+    .inventory-container { padding-inline: var(--spacing-400); }
+    .inventory-filters { grid-template-columns: minmax(0, 1fr); }
+    .inventory-metrics { gap: var(--spacing-200); }
+    .inventory-metric { padding: var(--spacing-400); }
+    .inventory-metric-number { font-size: var(--text-hero-700); }
+    .inventory-notice { flex-wrap: wrap; }
+    .inventory-notice > .inventory-button { margin-left: var(--spacing-800); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .inventory-button, .inventory-icon-button { transition: none; }
+  }
+}
