@@ -16,14 +16,39 @@ export const PAGE_SIZE = 25;
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
+// Rows are immutable snapshots, so their derived text can be cached per row object.
+const ownerTextCache = new WeakMap<ConnectionRow, string>();
+const searchTextCache = new WeakMap<ConnectionRow, string>();
+
 function ownerSearchText(row: ConnectionRow): string {
-  return row.owners
-    .map((owner) =>
-      [owner.id, owner.type, owner.displayName, owner.userPrincipalName, owner.role]
-        .filter(Boolean)
-        .join(' ')
-    )
-    .join(' ');
+  let text = ownerTextCache.get(row);
+  if (text === undefined) {
+    text = row.owners
+      .map((owner) =>
+        [owner.id, owner.type, owner.displayName, owner.userPrincipalName, owner.role]
+          .filter(Boolean)
+          .join(' ')
+      )
+      .join(' ');
+    ownerTextCache.set(row, text);
+  }
+  return text;
+}
+
+function searchText(row: ConnectionRow): string {
+  let text = searchTextCache.get(row);
+  if (text === undefined) {
+    text = [
+      row.displayName,
+      row.id,
+      row.connectorType,
+      row.connectivityType,
+      row.endpoint,
+      ownerSearchText(row),
+    ].join(' ').toLocaleLowerCase();
+    searchTextCache.set(row, text);
+  }
+  return text;
 }
 
 export function selectConnections(
@@ -40,14 +65,7 @@ export function selectConnections(
       } else if (filters.ownerStatus !== 'all' && row.ownerStatus !== filters.ownerStatus) {
         return false;
       }
-      return !query || [
-        row.displayName,
-        row.id,
-        row.connectorType,
-        row.connectivityType,
-        row.endpoint,
-        ownerSearchText(row),
-      ].join(' ').toLocaleLowerCase().includes(query);
+      return !query || searchText(row).includes(query);
     })
     .sort((a, b) => {
       const left = sort.column === 'owners' ? `${a.ownerStatus} ${ownerSearchText(a)}` : a[sort.column];

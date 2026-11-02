@@ -95,6 +95,19 @@ describe('Dedicated admin sign-in gate', () => {
     expect(mockSignIn).toHaveBeenCalledTimes(2);
   });
 
+  it('clears the previous admin session when a reconnect attempt fails', async () => {
+    mockSession.mockReturnValue(syntheticAdmin);
+    mockSignIn.mockRejectedValueOnce(new Error('Synthetic popup closed'));
+    render(<App />);
+    expect(await screen.findByText('Synthetic warehouse')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Connect again' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Admin sign-in did not complete');
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(mockDisconnect).toHaveBeenCalledTimes(1);
+  });
+
   it('uses an established in-memory admin session without opening another popup', async () => {
     mockSession.mockReturnValue(syntheticAdmin);
     render(<App />);

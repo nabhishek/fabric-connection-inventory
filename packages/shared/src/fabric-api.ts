@@ -100,6 +100,8 @@ export async function safeResult<T>(operation: () => Promise<T>): Promise<ApiRes
     }
     return { ok: true, data };
   } catch (error) {
+    // Cancellation ends the whole operation; it is not a per-request failure.
+    if (error instanceof Error && error.name === 'AbortError') throw error;
     const failure: ApiFailure = error instanceof InventoryError ? error.failure : {
       code: 'UnexpectedFailure',
       message: 'The inventory request failed unexpectedly. Retry or check the Fabric API permissions.',
@@ -154,17 +156,27 @@ export function requireTenantAdminToken(getToken: () => string, expectedTenantId
 }
 
 export class FabricInventory {
-  private readonly deadline: number;
+  private deadline: number;
   private retryAt = 0;
 
   constructor(
-    private readonly token: string,
+    private token: string,
     private readonly request: typeof fetch = fetch,
     private readonly now: () => number = Date.now,
     private readonly sleep: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
     private readonly abortSignal?: AbortSignal,
   ) {
     this.deadline = now() + 120_000;
+  }
+
+  /**
+   * Starts another request batch with a fresh token and wait budget. The
+   * Retry-After time already requested by Fabric carries over between batches.
+   */
+  nextBatch(token: string): this {
+    this.token = token;
+    this.deadline = this.now() + 120_000;
+    return this;
   }
 
   private async get(path: string, continuationToken: string): Promise<unknown> {
@@ -194,6 +206,8 @@ export class FabricInventory {
             AbortSignal.timeout(Math.min(25_000, this.deadline - this.now())),
         });
       } catch (error) {
+        // A user cancellation is not a timeout; let it propagate as an abort.
+        this.abortSignal?.throwIfAborted();
         throw new InventoryError({
           code: error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError') ? 'RequestTimeout' : 'NetworkError',
           message: 'The Fabric API could not be reached within the request deadline. Retry the inventory.',
@@ -226,6 +240,7 @@ export class FabricInventory {
           response.status === 401 ? 'Fabric rejected the resource token. Check its audience, expiry, consent, and the admin API identity requirements.' :
           response.status === 404 ? 'This connection or admin API was not found. The connection may have been deleted, or the preview API may be unavailable.' :
           response.status === 429 ? 'Fabric is throttling requests. Wait before refreshing the inventory.' :
+          response.status === 503 ? 'Fabric remained unavailable after bounded retries. Wait before refreshing the inventory.' :
           `Fabric returned HTTP ${response.status}. Retry or use the request ID to investigate.`;
         throw new InventoryError({ code: `FabricHttp${response.status}`, message, status: response.status, requestId });
       }

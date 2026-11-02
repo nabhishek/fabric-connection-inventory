@@ -82,6 +82,46 @@ test('honors Retry-After seconds before retrying', async () => {
   assert.deepEqual(delays, [7000]);
 });
 
+test('carries a Retry-After delay into the next batch', async () => {
+  let clock = 0;
+  let count = 0;
+  const delays = [];
+  const tokens = [];
+  const api = new FabricInventory('first-token', async (url, options) => {
+    tokens.push(options.headers.Authorization);
+    return ++count === 1 ?
+      new Response(null, { status: 503, headers: { 'retry-after': '300' } }) : json({ value: [] });
+  }, () => clock, async (ms) => { delays.push(ms); clock += ms; });
+  // The first batch cannot wait 300s within its budget and gives up without sleeping.
+  await assert.rejects(() => api.listConnections(''), (error) => error.failure.code === 'RetryBudgetExceeded');
+  clock = 250_000;
+  await api.nextBatch('second-token').listConnections('');
+  // The next batch still waits out the remaining 50s instead of calling Fabric immediately.
+  assert.deepEqual(delays, [50_000]);
+  assert.deepEqual(tokens, ['Bearer first-token', 'Bearer second-token']);
+});
+
+test('reports a 503 that persists after bounded retries with its status', async () => {
+  let count = 0;
+  let clock = 0;
+  const result = await safeResult(() => new FabricInventory('synthetic', async () => {
+    count++;
+    return new Response(null, { status: 503, headers: { 'retry-after': '1' } });
+  }, () => clock, async (ms) => { clock += ms; }).listConnections(''));
+  assert.equal(count, 3);
+  assert.equal(result.error.code, 'FabricHttp503');
+  assert.equal(result.error.status, 503);
+});
+
+test('a user cancellation propagates as an abort, not a timeout or per-row failure', async () => {
+  const controller = new AbortController();
+  const api = new FabricInventory('synthetic', async () => {
+    controller.abort();
+    throw new DOMException('Cancelled', 'AbortError');
+  }, Date.now, undefined, controller.signal);
+  await assert.rejects(() => safeResult(() => api.listConnections('')), (error) => error.name === 'AbortError');
+});
+
 test('never retries before Retry-After when the required wait exceeds the invocation budget', async () => {
   let count = 0;
   const api = new FabricInventory('synthetic', async () => {

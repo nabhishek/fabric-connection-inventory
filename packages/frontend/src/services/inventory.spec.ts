@@ -162,6 +162,7 @@ describe('loadInventory', () => {
   it.each([
     { code: 'SyntheticThrottled', message: 'Synthetic rate limit reached.', status: 429 },
     { code: 'RetryBudgetExceeded', message: 'Synthetic retry budget exhausted.' },
+    { code: 'FabricHttp503', message: 'Synthetic service unavailable after retries.', status: 503 },
   ])('stops future owner batches after $code while retaining partial owner states', async (error) => {
     const rows = syntheticRows(8);
     listConnections.mockResolvedValue(page(rows));

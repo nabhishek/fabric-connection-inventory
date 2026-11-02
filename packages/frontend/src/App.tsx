@@ -5,7 +5,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import {
   ArrowLeft, ArrowRight, Info, LoaderCircle, LogOut, RefreshCw, Search, ShieldCheck, X,
@@ -57,6 +57,10 @@ function App() {
       const nextSession = await signInAdmin();
       if (mounted.current && operation.current === request) setSession(nextSession);
     } catch (failure) {
+      if (operation.current === request) {
+        // The inventory is already unmounted, so drop any previous admin session to match.
+        await disconnectAdmin().catch(() => undefined);
+      }
       if (mounted.current && operation.current === request) {
         setError({
           action: 'connect',
@@ -172,9 +176,11 @@ function InventoryApp({ session, onDisconnect, onReconnect }: {
   const [sort, setSort] = useState<InventorySort>({ column: 'displayName', direction: 'asc' });
   const [page, setPage] = useState(1);
   const counts = useMemo(() => summarizeInventory(snapshot), [snapshot]);
+  // Typing stays responsive on large tenants; the filtered list catches up a frame later.
+  const search = useDeferredValue(filters.search);
   const rows = useMemo(
-    () => selectConnections(snapshot.connections, filters, sort),
-    [snapshot.connections, filters, sort]
+    () => selectConnections(snapshot.connections, { ...filters, search }, sort),
+    [snapshot.connections, filters, search, sort]
   );
   const connectorTypes = useMemo(
     () => [...new Set([
