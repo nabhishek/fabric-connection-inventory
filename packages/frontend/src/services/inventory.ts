@@ -30,7 +30,13 @@ export async function loadInventory({ signal, onProgress }: LoadInventoryOptions
   };
   publish();
   try {
-    const api = async () => new FabricInventory(await getAdminAccessToken(), fetch, Date.now, undefined, signal);
+    // One client per refresh so a Retry-After delay requested by Fabric applies to later batches too.
+    let client: FabricInventory | undefined;
+    const api = async () => {
+      const token = await getAdminAccessToken();
+      client = client ? client.nextBatch(token) : new FabricInventory(token, fetch, Date.now, undefined, signal);
+      return client;
+    };
     const seenTokens = new Set<string>();
     const seenIds = new Set<string>();
     let continuationToken = '';
@@ -68,6 +74,7 @@ export async function loadInventory({ signal, onProgress }: LoadInventoryOptions
     }
     snapshot = { ...snapshot, inventoryComplete: true, phase: 'owners' };
     publish();
+    const rowIndex = new Map(snapshot.connections.map((row, index) => [row.id, index]));
     for (let offset = 0; offset < snapshot.connections.length; offset += 6) {
       signal.throwIfAborted();
       const connectionIds = snapshot.connections.slice(offset, offset + 6).map((row) => row.id);
@@ -90,19 +97,21 @@ export async function loadInventory({ signal, onProgress }: LoadInventoryOptions
       }
       signal.throwIfAborted();
       const results = new Map(lookups.map((lookup) => [lookup.connectionId, lookup.result]));
-      snapshot = {
-        ...snapshot,
-        connections: snapshot.connections.map((row) => {
-          if (!connectionIds.includes(row.id)) return row;
-          const result = results.get(row.id);
-          if (!result) return { ...row, ownerStatus: 'error', ownerError: { code: 'MissingOwnerResult', message: 'The function did not return this connection owner result.' } };
-          return result.ok ? { ...row, owners: result.data, ownerStatus: 'loaded' } :
+      const connections = snapshot.connections.slice();
+      for (const connectionId of connectionIds) {
+        const index = rowIndex.get(connectionId)!;
+        const row = connections[index];
+        const result = results.get(connectionId);
+        connections[index] = !result ?
+          { ...row, ownerStatus: 'error', ownerError: { code: 'MissingOwnerResult', message: 'The function did not return this connection owner result.' } } :
+          result.ok ? { ...row, owners: result.data, ownerStatus: 'loaded' } :
             { ...row, ownerStatus: 'error', ownerError: result.error };
-        }),
-      };
+      }
+      snapshot = { ...snapshot, connections };
       publish();
       const throttled = lookups.find((lookup) => !lookup.result.ok &&
-        (lookup.result.error.status === 429 || lookup.result.error.code === 'RetryBudgetExceeded'));
+        (lookup.result.error.status === 429 || lookup.result.error.status === 503 ||
+          lookup.result.error.code === 'RetryBudgetExceeded'));
       if (throttled && !throttled.result.ok) {
         snapshot = { ...snapshot, phase: 'error', error: throttled.result.error };
         publish();

@@ -163,14 +163,14 @@ export function ConnectionTable({
                     </button>
                   </td>
                   <th scope="row">
-                    <p className="font-semibold">{row.displayName || 'Unnamed connection'}</p>
+                    <p className="font-semibold">{row.displayName || '(unnamed connection)'}</p>
                     <p className="mt-100 font-monospace text-200 font-regular text-muted-foreground">{row.id}</p>
                   </th>
                   <td><Owners row={row} /></td>
                   <td>
-                    <span className="inventory-badge">{row.connectorType || 'Not provided'}</span>
+                    <span className="inventory-badge">{row.connectorType || 'Not returned'}</span>
                   </td>
-                  <td className="font-monospace text-200">{row.endpoint || 'Not provided'}</td>
+                  <td className="font-monospace text-200">{row.endpoint || 'Not returned'}</td>
                 </tr>
                 {isExpanded && (
                   <tr id={detailId} className="inventory-detail-row">
